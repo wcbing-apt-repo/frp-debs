@@ -7,13 +7,13 @@ Self-packaged [frp](https://github.com/fatedier/frp), include `frps` 和 `frpc`,
 
 ### 直接下载 .deb 文件
 
-直接从 [Releases](https://github.com/wcbing-build/frp-debs/releases) 下载 .deb 文件。
+直接从 [Releases](https://github.com/wcbing-apt-repo/frp-debs/releases) 下载 .deb 文件。
 
 ### 添加 apt 仓库
 
 ```sh
 echo "Types: deb
-URIs: https://github.com/wcbing-build/frp-debs/releases/latest/download/
+URIs: https://github.com/wcbing-apt-repo/frp-debs/releases/latest/download/
 Suites: ./
 Trusted: yes" | sudo tee /etc/apt/sources.list.d/frp.sources
 sudo apt update
