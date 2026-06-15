@@ -19,22 +19,23 @@ prepare() {
 
 build() {
     BASE_DIR="$PACKAGE"_"$ARCH" && rm -rf "$BASE_DIR"
-    install -D templates/copyright -t "$BASE_DIR/usr/share/doc/$PACKAGE"
-    install -D tmp/changelog.gz -t "$BASE_DIR/usr/share/doc/$PACKAGE"
-
     # Download and move file
-    install -D -m 755 "$FRP_DIR/$PACKAGE" -t "$BASE_DIR/usr/bin"
-    install -D "$FRP_DIR/$PACKAGE.toml" -t "$BASE_DIR/etc/frp"
+    DOC_DIR="$BASE_DIR/usr/share/doc/$PACKAGE" && \
+    mkdir -p "$DOC_DIR" && \
+    cp templates/copyright "$DOC_DIR" && \
+    cp tmp/changelog.gz "$DOC_DIR"
+    install -D -m 755 tmp/"$FRP_DIR/$PACKAGE" -t "$BASE_DIR/usr/bin"
+    install -D -m 644 tmp/"$FRP_DIR/$PACKAGE.toml" -t "$BASE_DIR/etc/frp"
+
+    # Debian package control
+    mkdir -p "$BASE_DIR/DEBIAN"
+    echo "/etc/frp/$PACKAGE.toml" > "$BASE_DIR/DEBIAN/conffiles"
 
     if [ "$PACKAGE" = "frps" ]; then
-        install -D "templates/frps/frps.service" -t "$BASE_DIR/usr/lib/systemd/system"
-        install -D -m 755 "templates/frps/postinst" -t "$BASE_DIR/DEBIAN"
-        install -D -m 755 "templates/frps/postrm" -t "$BASE_DIR/DEBIAN"
-        install -D -m 755 "templates/frps/prerm" -t "$BASE_DIR/DEBIAN"
+        install -D -m 644 "templates/frps/frps.service" -t "$BASE_DIR/usr/lib/systemd/system"
+        cp templates/frps/p* "$BASE_DIR/DEBIAN"
     fi
 
-    # Package deb
-    mkdir -p "$BASE_DIR/DEBIAN"
     SIZE=$(du -sk "$BASE_DIR"/usr | cut -f1)
     echo "Package: $PACKAGE
 Version: $VERSION+1
@@ -48,6 +49,7 @@ Description: A fast reverse proxy to help you expose a local server
  behind a NAT or firewall to the internet. 
 " > "$BASE_DIR/DEBIAN/control"
 
+    # Package deb
     dpkg-deb -b --root-owner-group -Z xz "$BASE_DIR" output
 }
 
@@ -63,9 +65,11 @@ prepare
 
 for ARCH in $ARCH_LIST; do
     echo "Building $ARCH package..."
+    cd tmp
     curl -fsLO "$(get_url_by_arch "$ARCH")"
     FRP_DIR=frp_"$VERSION"_linux_"$ARCH"
     tar -xf "$FRP_DIR".tar.gz
+    cd ..
     PACKAGE="frps"
     build
     PACKAGE="frpc"
